@@ -6,6 +6,8 @@ from rest_framework import status
 from django.shortcuts import render
 from .services.wrapped import procesar_wrapped
 
+from rest_framework.decorators import api_view, parser_classes, authentication_classes, permission_classes
+
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 @ensure_csrf_cookie
@@ -14,6 +16,8 @@ def serve_frontend(request):
     return render(request, 'index.html')
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes([])
 @parser_classes([MultiPartParser])
 def upload_wrapped(request):
     files = request.FILES.getlist('file') # Obtiene todos los archivos subidos
