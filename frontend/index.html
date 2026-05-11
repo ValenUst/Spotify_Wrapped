@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Wrapped Analyzer</title>
+    <!-- Google Fonts for modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <header>
+            <h1>My Spotify Wrapped</h1>
+            <p class="subtitle">Discover your true listening habits</p>
+        </header>
+        
+        <main class="glass-panel">
+            <div id="upload-section" class="active">
+                <div class="upload-area" id="drop-zone">
+                    <div class="upload-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    </div>
+                    <h2>Upload your Spotify JSON</h2>
+                    <p>Drag & drop or click to select your StreamingHistory files</p>
+                    <input type="file" id="file-input" accept="application/json" multiple hidden>
+                    <button class="btn primary" onclick="document.getElementById('file-input').click()">Select File</button>
+                </div>
+                
+                <div id="loading" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing your tunes...</p>
+                </div>
+            </div>
+
+            <div id="results-section" class="hidden fade-in">
+                <div class="filters-container">
+                    <select id="yearFilter" class="glass-select">
+                        <option value="all">All Time</option>
+                    </select>
+                    <select id="monthFilter" class="glass-select" disabled>
+                        <option value="all">All Year</option>
+                    </select>
+                </div>
+
+                <div class="stats-header">
+                    <div class="stat-box gradient-1">
+                        <h3>Total Hours</h3>
+                        <p class="stat-value" id="total-hours">0</p>
+                    </div>
+                    <div class="stat-box gradient-2">
+                        <h3>Total Songs</h3>
+                        <p class="stat-value" id="total-songs">0</p>
+                    </div>
+                    <div class="stat-box gradient-3">
+                        <h3>Top Month</h3>
+                        <p class="stat-value" id="top-month" style="font-size: 2.5rem">-</p>
+                    </div>
+                    <div class="stat-box gradient-4">
+                        <h3>Peak Hour</h3>
+                        <p class="stat-value" id="top-hour" style="font-size: 2.5rem">-</p>
+                    </div>
+                </div>
+
+                <div class="top-artists-container">
+                    <h2>Top 10 Artists</h2>
+                    <ul id="top-artists-list" class="artist-list">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+
+                <div class="charts-container">
+                    <div class="chart-box">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+                
+                <button class="btn secondary" id="reset-btn">Analyze Another File</button>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Built with Django & Pandas | Made by <a href="https://www.linkedin.com/in/valentin-novarino/" target="_blank" rel="noopener noreferrer" style="color: var(--spotify-green); text-decoration: none; font-weight: 600;">Valentin Novarino</a></p>
+        </footer>
+    </div>
+
+    <!-- CSRF token required by Django (if we use sessions/cookies, but we'll read it directly or use exempt) -->
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        window.csrftoken = getCookie('csrftoken');
+    </script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
