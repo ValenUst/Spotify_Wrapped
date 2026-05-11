@@ -247,6 +247,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         document.getElementById('top-month').innerText = topMonth;
         document.getElementById('top-hour').innerText = topHourStr;
+        
+        const topSongElement = document.getElementById('top-song');
+        if (topSongElement) {
+            topSongElement.innerText = data.top_song || 'N/A';
+            topSongElement.title = data.top_song || 'N/A'; // Add title for tooltip if it overflows
+        }
 
         // Populate top artists
         const list = document.getElementById('top-artists-list');

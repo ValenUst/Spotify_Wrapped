@@ -300,6 +300,11 @@ h1 {
     border: 1px solid rgba(72, 198, 239, 0.2);
 }
 
+.gradient-5 {
+    background: linear-gradient(135deg, rgba(245, 166, 35, 0.2), rgba(245, 166, 35, 0.05));
+    border: 1px solid rgba(245, 166, 35, 0.2);
+}
+
 .stat-box h3 {
     font-size: 1rem;
     color: var(--text-secondary);

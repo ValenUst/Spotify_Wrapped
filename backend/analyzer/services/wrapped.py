@@ -6,10 +6,20 @@ def calculate_stats(df):
             'top_artists': {},
             'habits': {'monthly': {}, 'hourly': {}},
             'total_hours': 0,
-            'total_songs': 0
+            'total_songs': 0,
+            'top_song': 'N/A'
         }
         
     top_artists = df.groupby('artistName')['msPlayed'].sum().sort_values(ascending=False).head(10).to_dict()
+    
+    top_song = 'N/A'
+    if 'trackName' in df.columns:
+        df_tracks = df.dropna(subset=['trackName'])
+        if not df_tracks.empty:
+            top_track_series = df_tracks.groupby(['artistName', 'trackName'])['msPlayed'].sum()
+            if not top_track_series.empty:
+                top_track_tuple = top_track_series.idxmax()
+                top_song = f"{top_track_tuple[1]} - {top_track_tuple[0]}"
     
     return {
         'top_artists': {k: round(v / 3600000, 2) for k, v in top_artists.items()},
@@ -18,7 +28,8 @@ def calculate_stats(df):
             'hourly': df.groupby('hour').size().to_dict(),
         },
         'total_hours': round(df['msPlayed'].sum() / 3600000, 2),
-        'total_songs': len(df)
+        'total_songs': len(df),
+        'top_song': top_song
     }
 
 def procesar_wrapped(df):
@@ -26,6 +37,7 @@ def procesar_wrapped(df):
     rename_dict = {}
     if 'ts' in df.columns: rename_dict['ts'] = 'endTime'
     if 'master_metadata_album_artist_name' in df.columns: rename_dict['master_metadata_album_artist_name'] = 'artistName'
+    if 'master_metadata_track_name' in df.columns: rename_dict['master_metadata_track_name'] = 'trackName'
     if 'ms_played' in df.columns: rename_dict['ms_played'] = 'msPlayed'
     
     if 'msPlayed' not in df.columns and 'ms_played' in df.columns:
