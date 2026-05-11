@@ -331,19 +331,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const colors = ['#1DB954', '#8E2DE2', '#F5A623', '#00D4FF', '#FF007A', '#E2FF00'];
             
             window.wrappedData.years_available.forEach((year, index) => {
-                const yearStats = window.wrappedData.by_year[year].habits.monthly;
-                const dataPoints = Array.from({length: 12}, (_, i) => yearStats[i+1] || 0);
+                const yearData = window.wrappedData.by_year[year];
+                // Check if yearData and global exist to prevent errors
+                if (yearData && yearData.global && yearData.global.habits && yearData.global.habits.monthly) {
+                    const yearStats = yearData.global.habits.monthly;
+                    const dataPoints = Array.from({length: 12}, (_, i) => yearStats[i+1] || 0);
 
-                monthlyDatasets.push({
-                    label: `Canciones ${year}`,
-                    data: dataPoints,
-                    borderColor: colors[index % colors.length],
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.4,
-                    pointBackgroundColor: colors[index % colors.length]
-                });
+                    monthlyDatasets.push({
+                        label: `Canciones ${year}`,
+                        data: dataPoints,
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        pointBackgroundColor: colors[index % colors.length]
+                    });
+                }
             });
         } else {
             // Vista normal de un solo año o si solo hay un año disponible
