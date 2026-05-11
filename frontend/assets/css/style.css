@@ -139,6 +139,51 @@ h1 {
     background-color: rgba(255,255,255,0.05);
 }
 
+/* Spotify Auth Styles */
+.spotify-auth {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 2rem;
+}
+
+.spotify-btn {
+    background-color: transparent;
+    border: 1px solid var(--spotify-green);
+    color: var(--spotify-green);
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1.5rem;
+}
+
+.spotify-btn:hover {
+    background-color: rgba(29, 185, 84, 0.1);
+    transform: translateY(-2px);
+}
+
+.spotify-profile-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    border: 1px solid var(--glass-border);
+    animation: fadeInDown 0.5s ease;
+}
+
+.spotify-profile-badge img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--spotify-green);
+}
+
+.spotify-profile-badge span {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
 .staging-actions .btn {
     margin-top: 0;
     flex: 1;

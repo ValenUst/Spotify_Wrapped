@@ -6,6 +6,55 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsSection = document.getElementById('results-section');
     const resetBtn = document.getElementById('reset-btn');
 
+    // Spotify OAuth Logic
+    const SPOTIFY_CLIENT_ID = 'bef9f7a15cf84dda80c0d32409b8f115';
+    // Remove trailing slash to match exact redirect URIs typically configured
+    const SPOTIFY_REDIRECT_URI = window.location.origin + window.location.pathname.replace(/\/$/, ""); 
+    const spotifyLoginBtn = document.getElementById('spotify-login-btn');
+    const spotifyProfileBadge = document.getElementById('spotify-profile');
+    const spotifyAvatar = document.getElementById('spotify-avatar');
+    const spotifyName = document.getElementById('spotify-name');
+
+    function getHashParams() {
+        const hashParams = {};
+        let e, r = /([^&;=]+)=?([^&;]*)/g,
+            q = window.location.hash.substring(1);
+        while (e = r.exec(q)) {
+            hashParams[e[1]] = decodeURIComponent(e[2]);
+        }
+        return hashParams;
+    }
+
+    const params = getHashParams();
+    if (params.access_token) {
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+        
+        fetch('https://api.spotify.com/v1/me', {
+            headers: { 'Authorization': 'Bearer ' + params.access_token }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) throw new Error(data.error.message);
+            
+            spotifyLoginBtn.classList.add('hidden');
+            spotifyProfileBadge.classList.remove('hidden');
+            spotifyName.innerText = `Hola, ${data.display_name.split(' ')[0]}`;
+            if (data.images && data.images.length > 0) {
+                spotifyAvatar.src = data.images[0].url;
+            } else {
+                spotifyAvatar.src = 'data:image/svg+xml;charset=UTF-8,%3csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%231DB954"%3e%3cpath d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm0 3.6c2.64 0 4.8 2.16 4.8 4.8s-2.16 4.8-4.8 4.8-4.8-2.16-4.8-4.8 2.16-4.8 4.8-4.8zm0 16.8c-3.36 0-6.24-1.92-7.68-4.68 1.8-1.44 4.08-2.28 6.48-2.28s4.68.84 6.48 2.28c-1.44 2.76-4.32 4.68-7.68 4.68z"/%3e%3c/svg%3e';
+            }
+        })
+        .catch(err => console.error("Error fetching Spotify profile:", err));
+    }
+
+    if (spotifyLoginBtn) {
+        spotifyLoginBtn.addEventListener('click', () => {
+            let authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${encodeURIComponent(SPOTIFY_CLIENT_ID)}&scope=user-read-private&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}`;
+            window.location.href = authUrl;
+        });
+    }
+
     // Drag and drop functionality
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
