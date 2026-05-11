@@ -12,10 +12,6 @@
   ],
   "routes": [
     {
-      "src": "/static/(.*)",
-      "dest": "/frontend/assets/$1"
-    },
-    {
       "src": "/(.*)",
       "dest": "backend/core/wsgi.py"
     }
