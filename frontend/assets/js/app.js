@@ -322,24 +322,48 @@ document.addEventListener('DOMContentLoaded', () => {
         // Gráfico de uso mensual
         const ctxMonth = document.getElementById('monthlyChart').getContext('2d');
         
-        // Formatear etiquetas de meses si stats.habits.monthly está disponible
-        const monthLabels = Object.keys(stats.habits.monthly).map(m => {
-            const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-            return months[parseInt(m) - 1] || m;
-        });
+        const monthLabels = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+        let monthlyDatasets = [];
+        const yearFilterValue = document.getElementById('yearFilter').value;
+
+        // Si estamos en "All Time" y hay más de un año, hacemos el comparador de meses
+        if (yearFilterValue === 'all' && window.wrappedData && window.wrappedData.years_available.length > 1) {
+            const colors = ['#1DB954', '#8E2DE2', '#F5A623', '#00D4FF', '#FF007A', '#E2FF00'];
+            
+            window.wrappedData.years_available.forEach((year, index) => {
+                const yearStats = window.wrappedData.by_year[year].habits.monthly;
+                const dataPoints = Array.from({length: 12}, (_, i) => yearStats[i+1] || 0);
+
+                monthlyDatasets.push({
+                    label: `Canciones ${year}`,
+                    data: dataPoints,
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: 'transparent',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4,
+                    pointBackgroundColor: colors[index % colors.length]
+                });
+            });
+        } else {
+            // Vista normal de un solo año o si solo hay un año disponible
+            const dataPoints = Array.from({length: 12}, (_, i) => stats.habits.monthly[i+1] || 0);
+            
+            monthlyDatasets.push({
+                label: 'Canciones por mes',
+                data: dataPoints,
+                borderColor: '#1DB954',
+                backgroundColor: 'rgba(29, 185, 84, 0.2)',
+                fill: true,
+                tension: 0.4
+            });
+        }
 
         window.monthlyChartInstance = new Chart(ctxMonth, {
             type: 'line',
             data: {
-                labels: monthLabels, // Meses 1-12
-                datasets: [{
-                    label: 'Canciones por mes',
-                    data: Object.values(stats.habits.monthly),
-                    borderColor: '#1DB954', // Verde Spotify
-                    backgroundColor: 'rgba(29, 185, 84, 0.2)',
-                    fill: true,
-                    tension: 0.4
-                }]
+                labels: monthLabels,
+                datasets: monthlyDatasets
             },
             options: {
                 responsive: true,
