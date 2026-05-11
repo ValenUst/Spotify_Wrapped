@@ -8,13 +8,14 @@ from .services.wrapped import procesar_wrapped
 
 from rest_framework.decorators import api_view, parser_classes, authentication_classes, permission_classes
 
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 
 @ensure_csrf_cookie
 def serve_frontend(request):
     """Serves the main frontend index.html."""
     return render(request, 'index.html')
 
+@csrf_exempt
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([])

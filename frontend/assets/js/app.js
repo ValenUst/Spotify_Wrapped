@@ -68,10 +68,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                let errorMsg = 'Server returned an error.';
+                let errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
                 try {
-                    const errData = await response.json();
-                    if (errData.error) errorMsg = errData.error;
+                    const text = await response.text();
+                    try {
+                        const errData = JSON.parse(text);
+                        if (errData.error) errorMsg = errData.error;
+                    } catch (e) {
+                        // Si no es JSON (ej. Vercel HTML error), mostramos los primeros caracteres
+                        errorMsg += `\nDetalle: ${text.substring(0, 100)}`;
+                    }
                 } catch(e) {}
                 throw new Error(errorMsg);
             }
