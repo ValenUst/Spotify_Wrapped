@@ -29,8 +29,14 @@ def upload_wrapped(request):
     for file in files:
         try:
             import json
-            # Leer el archivo con json de forma segura
-            content = file.read().decode('utf-8')
+            import gzip
+            
+            raw_data = file.read()
+            if file.name.endswith('.gz'):
+                content = gzip.decompress(raw_data).decode('utf-8')
+            else:
+                content = raw_data.decode('utf-8')
+                
             data_json = json.loads(content)
             df_temp = pd.DataFrame(data_json)
             data_frames.append(df_temp)

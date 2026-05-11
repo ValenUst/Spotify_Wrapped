@@ -52,13 +52,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function uploadFiles(files) {
         const formData = new FormData();
-        files.forEach(f => formData.append('file', f));
 
         // UI transitions
         dropZone.classList.add('hidden');
         loadingSection.classList.remove('hidden');
 
         try {
+            for (let f of files) {
+                // Comprimir archivo (gzip) para evitar límites de Vercel (4.5 MB)
+                if (typeof CompressionStream !== 'undefined') {
+                    const stream = f.stream();
+                    const compressedStream = stream.pipeThrough(new CompressionStream('gzip'));
+                    const response = new Response(compressedStream);
+                    const blob = await response.blob();
+                    formData.append('file', blob, f.name + '.gz');
+                } else {
+                    formData.append('file', f);
+                }
+            }
             const response = await fetch('/api/upload/', {
                 method: 'POST',
                 headers: {
