@@ -383,16 +383,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Gráfico de uso horario (Radar o Barras)
         const ctxHour = document.getElementById('hourlyChart').getContext('2d');
+        const hourLabels = Array.from({length: 24}, (_, i) => `${i}h`);
+        let hourlyDatasets = [];
+
+        if (yearFilterValue === 'all' && window.wrappedData && window.wrappedData.years_available.length > 1) {
+            const colors = ['#8E2DE2', '#1DB954', '#F5A623', '#00D4FF', '#FF007A', '#E2FF00'];
+            
+            window.wrappedData.years_available.forEach((year, index) => {
+                const yearData = window.wrappedData.by_year[year];
+                if (yearData && yearData.global && yearData.global.habits && yearData.global.habits.hourly) {
+                    const yearStats = yearData.global.habits.hourly;
+                    const dataPoints = Array.from({length: 24}, (_, i) => yearStats[i] || 0);
+
+                    hourlyDatasets.push({
+                        label: `Actividad ${year}`,
+                        data: dataPoints,
+                        backgroundColor: colors[index % colors.length] + 'B3', // 70% opacity
+                        borderRadius: 4
+                    });
+                }
+            });
+        } else {
+            const dataPoints = Array.from({length: 24}, (_, i) => stats.habits.hourly[i] || 0);
+            
+            hourlyDatasets.push({
+                label: 'Actividad por hora',
+                data: dataPoints,
+                backgroundColor: 'rgba(142, 45, 226, 0.7)',
+                borderRadius: 4
+            });
+        }
+
         window.hourlyChartInstance = new Chart(ctxHour, {
             type: 'bar',
             data: {
-                labels: Object.keys(stats.habits.hourly).map(h => `${h}h`), // Horas 0-23
-                datasets: [{
-                    label: 'Actividad por hora',
-                    data: Object.values(stats.habits.hourly),
-                    backgroundColor: 'rgba(142, 45, 226, 0.7)',
-                    borderRadius: 4
-                }]
+                labels: hourLabels,
+                datasets: hourlyDatasets
             },
             options: {
                 responsive: true,
