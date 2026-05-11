@@ -143,6 +143,50 @@ h1 {
     display: none !important;
 }
 
+/* Staging Area Styles */
+#staging-area h3 {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    font-weight: 400;
+}
+
+#staged-files-list {
+    list-style: none;
+    margin: 1rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.staged-file-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: fadeInDown 0.3s ease;
+}
+
+.staged-file-item button {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.staged-file-item button:hover {
+    color: #ff4757;
+}
+
 #loading {
     text-align: center;
     display: flex;

@@ -38,6 +38,12 @@ document.addEventListener('DOMContentLoaded', () => {
         handleFiles(this.files);
     });
 
+    const stagingArea = document.getElementById('staging-area');
+    const stagedFilesList = document.getElementById('staged-files-list');
+    const startAnalysisBtn = document.getElementById('start-analysis-btn');
+
+    let stagedFiles = [];
+
     function handleFiles(files) {
         if (files.length === 0) return;
         
@@ -47,14 +53,60 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        uploadFiles(validFiles);
+        // Add to staging array
+        stagedFiles = stagedFiles.concat(validFiles);
+        
+        // Reset file input so same file can be selected again if needed
+        fileInput.value = '';
+        
+        renderStagedFiles();
     }
+
+    function renderStagedFiles() {
+        if (stagedFiles.length === 0) {
+            stagingArea.classList.add('hidden');
+            dropZone.classList.remove('hidden');
+            return;
+        }
+
+        dropZone.classList.add('hidden');
+        stagingArea.classList.remove('hidden');
+        
+        stagedFilesList.innerHTML = '';
+        stagedFiles.forEach((file, index) => {
+            const li = document.createElement('li');
+            li.className = 'staged-file-item';
+            
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            
+            li.innerHTML = `
+                <span>📄 ${file.name} <small style="color:var(--text-secondary)">(${sizeMB} MB)</small></span>
+                <button type="button" data-index="${index}" title="Remove file">&times;</button>
+            `;
+            stagedFilesList.appendChild(li);
+        });
+
+        document.querySelectorAll('.staged-file-item button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-index'));
+                stagedFiles.splice(idx, 1);
+                renderStagedFiles();
+            });
+        });
+    }
+
+    startAnalysisBtn.addEventListener('click', () => {
+        if (stagedFiles.length > 0) {
+            uploadFiles(stagedFiles);
+        }
+    });
 
     async function uploadFiles(files) {
         const formData = new FormData();
 
         // UI transitions
         dropZone.classList.add('hidden');
+        stagingArea.classList.add('hidden');
         loadingSection.classList.remove('hidden');
 
         try {
@@ -105,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Reset UI
             loadingSection.classList.add('hidden');
-            dropZone.classList.remove('hidden');
+            stagingArea.classList.remove('hidden');
         }
     }
 
@@ -254,8 +306,11 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsSection.classList.add('hidden');
         uploadSection.classList.remove('hidden');
         dropZone.classList.remove('hidden');
+        stagingArea.classList.add('hidden');
         loadingSection.classList.add('hidden');
         fileInput.value = '';
+        stagedFiles = [];
+        stagedFilesList.innerHTML = '';
     });
 
     // Render Charts Function

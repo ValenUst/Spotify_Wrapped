@@ -30,6 +30,15 @@
                     <button class="btn primary" onclick="document.getElementById('file-input').click()">Select File</button>
                 </div>
                 
+                <div id="staging-area" class="hidden fade-in" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Selected Files</h3>
+                    <ul id="staged-files-list"></ul>
+                    <div class="staging-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                        <button class="btn secondary" onclick="document.getElementById('file-input').click()">+ Add More Files</button>
+                        <button class="btn primary" id="start-analysis-btn">▶ Start Analysis</button>
+                    </div>
+                </div>
+                
                 <div id="loading" class="hidden">
                     <div class="spinner"></div>
                     <p>Analyzing your tunes...</p>
