@@ -139,6 +139,15 @@ h1 {
     background-color: rgba(255,255,255,0.05);
 }
 
+.staging-actions .btn {
+    margin-top: 0;
+    flex: 1;
+    max-width: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .hidden {
     display: none !important;
 }
