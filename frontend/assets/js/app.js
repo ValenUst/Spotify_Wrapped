@@ -15,26 +15,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const spotifyAvatar = document.getElementById('spotify-avatar');
     const spotifyName = document.getElementById('spotify-name');
 
-    function getHashParams() {
-        const hashParams = {};
-        let e, r = /([^&;=]+)=?([^&;]*)/g,
-            q = window.location.hash.substring(1);
-        while (e = r.exec(q)) {
-            hashParams[e[1]] = decodeURIComponent(e[2]);
-        }
-        return hashParams;
+    const generateRandomString = (length) => {
+        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const values = crypto.getRandomValues(new Uint8Array(length));
+        return values.reduce((acc, x) => acc + possible[x % possible.length], "");
     }
 
-    const params = getHashParams();
-    if (params.access_token) {
-        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-        
+    const sha256 = async (plain) => {
+        const encoder = new TextEncoder()
+        const data = encoder.encode(plain)
+        return window.crypto.subtle.digest('SHA-256', data)
+    }
+
+    const base64encode = (input) => {
+        return btoa(String.fromCharCode(...new Uint8Array(input)))
+            .replace(/=/g, '')
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_');
+    }
+
+    function fetchProfile(token) {
         fetch('https://api.spotify.com/v1/me', {
-            headers: { 'Authorization': 'Bearer ' + params.access_token }
+            headers: { 'Authorization': 'Bearer ' + token }
         })
-        .then(response => response.json())
+        .then(response => {
+            if (response.status === 401) {
+                localStorage.removeItem('access_token');
+                throw new Error("Token expired");
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.error) throw new Error(data.error.message);
+            if (!data || data.error) return;
             
             spotifyLoginBtn.classList.add('hidden');
             spotifyProfileBadge.classList.remove('hidden');
@@ -48,10 +60,60 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(err => console.error("Error fetching Spotify profile:", err));
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    let code = urlParams.get('code');
+
+    if (code) {
+        let codeVerifier = localStorage.getItem('code_verifier');
+        const payload = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                client_id: SPOTIFY_CLIENT_ID,
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: SPOTIFY_REDIRECT_URI,
+                code_verifier: codeVerifier,
+            }),
+        }
+
+        fetch("https://accounts.spotify.com/api/token", payload)
+            .then(res => res.json())
+            .then(data => {
+                if(data.access_token) {
+                    localStorage.setItem('access_token', data.access_token);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    fetchProfile(data.access_token);
+                }
+            });
+    } else {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            fetchProfile(token);
+        }
+    }
+
     if (spotifyLoginBtn) {
-        spotifyLoginBtn.addEventListener('click', () => {
-            let authUrl = `https://accounts.spotify.com/authorize?response_type=token&client_id=${encodeURIComponent(SPOTIFY_CLIENT_ID)}&scope=user-read-private&redirect_uri=${encodeURIComponent(SPOTIFY_REDIRECT_URI)}`;
-            window.location.href = authUrl;
+        spotifyLoginBtn.addEventListener('click', async () => {
+            const codeVerifier = generateRandomString(64);
+            const hashed = await sha256(codeVerifier);
+            const codeChallenge = base64encode(hashed);
+            window.localStorage.setItem('code_verifier', codeVerifier);
+            
+            const scope = 'user-read-private user-read-email';
+            const authUrl = new URL("https://accounts.spotify.com/authorize");
+            const params =  {
+                response_type: 'code',
+                client_id: SPOTIFY_CLIENT_ID,
+                scope,
+                code_challenge_method: 'S256',
+                code_challenge: codeChallenge,
+                redirect_uri: SPOTIFY_REDIRECT_URI,
+            };
+            authUrl.search = new URLSearchParams(params).toString();
+            window.location.href = authUrl.toString();
         });
     }
 
