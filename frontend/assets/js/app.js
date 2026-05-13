@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             spotifyLoginBtn.classList.add('hidden');
             spotifyProfileBadge.classList.remove('hidden');
-            spotifyName.innerText = `Hola, ${data.display_name.split(' ')[0]}`;
+            spotifyName.innerText = `Hi there, ${data.display_name.split(' ')[0]}`;
             if (data.images && data.images.length > 0) {
                 spotifyAvatar.src = data.images[0].url;
             } else {
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const codeChallenge = base64encode(hashed);
             window.localStorage.setItem('code_verifier', codeVerifier);
             
-            const scope = 'user-read-private user-read-email';
+            const scope = 'user-read-private user-read-email user-top-read';
             const authUrl = new URL("https://accounts.spotify.com/authorize");
             const params =  {
                 response_type: 'code',
@@ -272,6 +272,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const liveApiBtn = document.getElementById('live-api-btn');
+    if (liveApiBtn) {
+        liveApiBtn.addEventListener('click', async () => {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                alert('Please connect your Spotify account first using the button at the top right.');
+                return;
+            }
+
+            // UI transitions
+            uploadSection.classList.add('hidden');
+            loadingSection.classList.remove('hidden');
+
+            try {
+                // Fetch Top Artists
+                const artistsRes = await fetch('https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=10', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!artistsRes.ok) throw new Error("Failed to fetch top artists");
+                const artistsData = await artistsRes.json();
+
+                // Fetch Top Tracks
+                const tracksRes = await fetch('https://api.spotify.com/v1/me/top/tracks?time_range=long_term&limit=1', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if (!tracksRes.ok) throw new Error("Failed to fetch top tracks");
+                const tracksData = await tracksRes.json();
+
+                // Format data for displayResults
+                const topArtistsMap = {};
+                artistsData.items.forEach(artist => {
+                    // We don't have hours, so we just assign a fake score based on rank to keep the sorting 
+                    // or just 0, but we want it to display correctly. We will modify displayResults to handle this.
+                    topArtistsMap[artist.name] = artist.popularity || 0; // Using popularity as a proxy stat or just fake hours
+                });
+
+                let topSongName = 'N/A';
+                if (tracksData.items && tracksData.items.length > 0) {
+                    const t = tracksData.items[0];
+                    topSongName = `${t.name} - ${t.artists[0].name}`;
+                }
+
+                const liveData = {
+                    is_live_api: true,
+                    top_artists: topArtistsMap,
+                    top_song: topSongName,
+                    total_hours: 0,
+                    total_songs: 0,
+                    habits: { monthly: {}, hourly: {} },
+                    raw_artists: artistsData.items // passing raw data if we want images later
+                };
+
+                window.wrappedData = { global: liveData, years_available: [], by_year: {} };
+                
+                initFilters(window.wrappedData);
+                displayResults(liveData);
+
+            } catch (error) {
+                console.error(error);
+                alert("Error fetching Spotify data. Make sure you are logged in and have activity on your account.");
+                loadingSection.classList.add('hidden');
+                uploadSection.classList.remove('hidden');
+            }
+        });
+    }
+
     function initFilters(data) {
         const yearFilter = document.getElementById('yearFilter');
         const monthFilter = document.getElementById('monthFilter');
@@ -332,9 +398,18 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadSection.classList.add('hidden');
         resultsSection.classList.remove('hidden');
 
+        const isLive = data.is_live_api === true;
+
+        const notAvailableHtml = '<span style="font-size: 1rem; font-weight: 500; opacity: 0.7; letter-spacing: 0;">Only available via JSON</span>';
+
         // Populate summary stats
-        animateValue('total-hours', 0, data.total_hours, 1000);
-        animateValue('total-songs', 0, data.total_songs, 1000);
+        if (isLive) {
+            document.getElementById('total-hours').innerHTML = notAvailableHtml;
+            document.getElementById('total-songs').innerHTML = notAvailableHtml;
+        } else {
+            animateValue('total-hours', 0, data.total_hours, 1000);
+            animateValue('total-songs', 0, data.total_songs, 1000);
+        }
 
         // Process Habits (Find Top Month and Top Hour)
         const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -356,8 +431,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        document.getElementById('top-month').innerText = topMonth;
-        document.getElementById('top-hour').innerText = topHourStr;
+        if (isLive) {
+            document.getElementById('top-month').innerHTML = notAvailableHtml;
+            document.getElementById('top-hour').innerHTML = notAvailableHtml;
+        } else {
+            document.getElementById('top-month').innerText = topMonth;
+            document.getElementById('top-hour').innerText = topHourStr;
+        }
         
         const topSongElement = document.getElementById('top-song');
         if (topSongElement) {
@@ -374,23 +454,39 @@ document.addEventListener('DOMContentLoaded', () => {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 10);
 
-        artists.forEach(([name, hours], index) => {
+        artists.forEach(([name, val], index) => {
             const li = document.createElement('li');
             li.className = 'artist-item';
             // Add a slight delay for staggered animation
             li.style.animationDelay = `${index * 0.1}s`;
             li.style.animation = 'fadeInUp 0.5s ease both';
             
+            const valDisplay = isLive ? `<span style="font-size:0.8rem; opacity:0.6">Top Artist</span>` : `${val} hrs`;
+
             li.innerHTML = `
                 <span class="artist-rank">#${index + 1}</span>
                 <span class="artist-name">${name}</span>
-                <span class="artist-hours">${hours} hrs</span>
+                <span class="artist-hours">${valDisplay}</span>
             `;
             list.appendChild(li);
         });
 
-        // Render charts
-        renderCharts(data);
+        // Hide/Show elements based on mode
+        const filtersContainer = document.querySelector('.filters-container');
+        const chartsContainer = document.querySelector('.charts-container');
+        
+        if (isLive) {
+            if(filtersContainer) filtersContainer.classList.add('hidden');
+            if(chartsContainer) chartsContainer.classList.add('hidden');
+            // Change button text
+            resetBtn.innerText = "Back to Start";
+        } else {
+            if(filtersContainer) filtersContainer.classList.remove('hidden');
+            if(chartsContainer) chartsContainer.classList.remove('hidden');
+            resetBtn.innerText = "Analyze Another File";
+            // Render charts
+            renderCharts(data);
+        }
     }
 
     // Utility for counting up numbers
