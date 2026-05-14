@@ -286,15 +286,18 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingSection.classList.remove('hidden');
 
             try {
+                const timeRangeDropdown = document.getElementById('live-time-range');
+                const timeRange = timeRangeDropdown ? timeRangeDropdown.value : 'long_term';
+
                 // Fetch Top Artists
-                const artistsRes = await fetch('https://api.spotify.com/v1/me/top/artists?time_range=long_term&limit=10', {
+                const artistsRes = await fetch(`https://api.spotify.com/v1/me/top/artists?time_range=${timeRange}&limit=10`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
                 if (!artistsRes.ok) throw new Error("Failed to fetch top artists");
                 const artistsData = await artistsRes.json();
 
                 // Fetch Top Tracks
-                const tracksRes = await fetch('https://api.spotify.com/v1/me/top/tracks?time_range=long_term&limit=1', {
+                const tracksRes = await fetch(`https://api.spotify.com/v1/me/top/tracks?time_range=${timeRange}&limit=1`, {
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
                 if (!tracksRes.ok) throw new Error("Failed to fetch top tracks");
