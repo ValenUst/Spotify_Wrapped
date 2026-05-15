@@ -1,6 +1,7 @@
 import pandas as pd
 
 def calculate_stats(df):
+    """Calcula las métricas core para un DataFrame dado (global, anual o mensual)."""
     if df.empty:
         return {
             'top_artists': {},
@@ -10,16 +11,17 @@ def calculate_stats(df):
             'top_song': 'N/A'
         }
         
+    # Top 10 artistas por tiempo escuchado
     top_artists = df.groupby('artistName')['msPlayed'].sum().sort_values(ascending=False).head(10).to_dict()
     
+    # Identificar la canción más escuchada (Top Song)
     top_song = 'N/A'
     if 'trackName' in df.columns:
-        df_tracks = df.dropna(subset=['trackName'])
-        if not df_tracks.empty:
-            top_track_series = df_tracks.groupby(['artistName', 'trackName'])['msPlayed'].sum()
-            if not top_track_series.empty:
-                top_track_tuple = top_track_series.idxmax()
-                top_song = f"{top_track_tuple[1]} - {top_track_tuple[0]}"
+        # Agrupamos por artista y canción para evitar colisiones de nombres iguales en distintos artistas
+        top_track_series = df.groupby(['artistName', 'trackName'])['msPlayed'].sum()
+        if not top_track_series.empty:
+            idx_max = top_track_series.idxmax()
+            top_song = f"{idx_max[1]} - {idx_max[0]}"
     
     return {
         'top_artists': {k: round(v / 3600000, 2) for k, v in top_artists.items()},
@@ -33,54 +35,58 @@ def calculate_stats(df):
     }
 
 def procesar_wrapped(df):
-    # 1. Normalización inteligente (mapea lo que encuentre)
-    rename_dict = {}
-    if 'ts' in df.columns: rename_dict['ts'] = 'endTime'
-    if 'master_metadata_album_artist_name' in df.columns: rename_dict['master_metadata_album_artist_name'] = 'artistName'
-    if 'master_metadata_track_name' in df.columns: rename_dict['master_metadata_track_name'] = 'trackName'
-    if 'ms_played' in df.columns: rename_dict['ms_played'] = 'msPlayed'
+    """Punto de entrada principal para el análisis del JSON de Spotify."""
     
-    if 'msPlayed' not in df.columns and 'ms_played' in df.columns:
-        rename_dict['ms_played'] = 'msPlayed'
+    # 1. Normalización de columnas (Soporta formato Standard y Extended)
+    rename_map = {
+        'ts': 'endTime',
+        'master_metadata_album_artist_name': 'artistName',
+        'master_metadata_track_name': 'trackName',
+        'ms_played': 'msPlayed'
+    }
+    # Solo renombramos las columnas que efectivamente existan en el archivo subido
+    df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
 
-    if rename_dict:
-        df = df.rename(columns=rename_dict)
+    # 2. Validación y Limpieza crítica
+    if 'endTime' not in df.columns or ('artistName' not in df.columns and 'broadcaster_name' not in df.columns):
+        raise ValueError("El JSON no tiene la estructura de Spotify esperada.")
 
-    # 2. Validación de seguridad
-    if 'endTime' not in df.columns or 'artistName' not in df.columns:
-        if 'broadcaster_name' in df.columns:
-             df = df.rename(columns={'broadcaster_name': 'artistName'})
-        else:
-             raise ValueError("El JSON no tiene la estructura de Spotify esperada (faltan columnas de fecha o artista).")
+    if 'artistName' not in df.columns and 'broadcaster_name' in df.columns:
+        df = df.rename(columns={'broadcaster_name': 'artistName'})
 
-    # 3. Limpieza de datos
+    # Eliminamos filas sin datos esenciales para el cálculo
     df = df.dropna(subset=['artistName', 'msPlayed'])
+    
+    # 3. Feature Engineering (Creación de columnas temporales)
     df['endTime'] = pd.to_datetime(df['endTime'])
     df['year'] = df['endTime'].dt.year
     df['month'] = df['endTime'].dt.month
     df['hour'] = df['endTime'].dt.hour
     
-    years = sorted(df['year'].dropna().unique().tolist())
+    # 4. Construcción de la respuesta jerárquica
+    years = sorted(df['year'].unique().tolist())
     
-    # 4. Agrupación Jerárquica
     result = {
-        'years_available': years,
+        'years_available': [str(int(y)) for y in years],
         'global': calculate_stats(df),
         'by_year': {}
     }
     
-    for y in years:
-        df_year = df[df['year'] == y]
+    # Optimización: Agrupamos por año una sola vez
+    for y, df_year in df.groupby('year'):
+        year_str = str(int(y))
+        
+        # Calculamos stats anuales
         year_data = {
             'global': calculate_stats(df_year),
             'by_month': {}
         }
         
-        months = sorted(df_year['month'].dropna().unique().tolist())
-        for m in months:
-            df_month = df_year[df_year['month'] == m]
-            year_data['by_month'][str(int(m))] = calculate_stats(df_month)
+        # Optimización: Agrupamos por mes dentro de ese año
+        for m, df_month in df_year.groupby('month'):
+            month_str = str(int(m))
+            year_data['by_month'][month_str] = calculate_stats(df_month)
             
-        result['by_year'][str(int(y))] = year_data
+        result['by_year'][year_str] = year_data
         
     return result

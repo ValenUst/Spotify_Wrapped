@@ -26,6 +26,7 @@ venv/
 .venv/
 env/
 ENV/
+.env
 
 # Django
 *.log
@@ -57,3 +58,6 @@ StreamingHistory*.json
 Streaming_History*.json
 Ends*.json
 MyData/
+
+# Django Static Files
+staticfiles/
