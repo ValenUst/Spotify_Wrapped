@@ -10,8 +10,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # TIP: Si sigue fallando el Host, en Vercel pone la variable ALLOWED_HOSTS como *
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
-CSRF_TRUSTED_ORIGINS = ['*']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost', 'spotify-wrapped-gilt.vercel.app').split(',')
+CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app', 'http://127.0.0.1:8000', 'http://localhost:8000', 'https://spotify-wrapped-gilt.vercel.app', 'spotify-wrapped-gilt.vercel.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
