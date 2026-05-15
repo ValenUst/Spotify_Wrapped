@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 if (response.status === 413) {
-                    throw new Error("Files are too large for the server. Please try uploading fewer files at once (4.5 MB limit on Vercel).");
+                    throw new Error("Files are too large for the server. Please try uploading fewer files at once (4.5 MB Vercel limit).");
                 }
                 
                 let errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
