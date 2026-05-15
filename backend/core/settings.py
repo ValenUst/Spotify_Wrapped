@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost', 'spotify-wrapped-gilt.vercel.app').split(',')
-CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app', 'http://127.0.0.1:8000, http://localhost:8000', 'https://spotify-wrapped-gilt.vercel.app', 'spotify-wrapped-gilt.vercel.app']
+CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app', 'http://127.0.0.1:8000,http://localhost:8000', 'https://spotify-wrapped-gilt.vercel.app', 'spotify-wrapped-gilt.vercel.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
