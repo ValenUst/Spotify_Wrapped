@@ -242,6 +242,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
+                if (response.status === 413) {
+                    throw new Error("Los archivos son demasiado grandes para el servidor. Por favor, intenta cargar menos archivos a la vez (límite de 4.5 MB en Vercel).");
+                }
+                
                 let errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
                 try {
                     const text = await response.text();
