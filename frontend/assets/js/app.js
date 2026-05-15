@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 if (response.status === 413) {
-                    throw new Error("Los archivos son demasiado grandes para el servidor. Por favor, intenta cargar menos archivos a la vez (límite de 4.5 MB en Vercel).");
+                    throw new Error("Files are too large for the server. Please try uploading fewer files at once (4.5 MB limit on Vercel).");
                 }
                 
                 let errorMsg = `HTTP Error ${response.status}: ${response.statusText}`;
@@ -268,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (error) {
             console.error('Error uploading file:', error);
-            alert('Error en el análisis: ' + error.message);
+            alert('Analysis error: ' + error.message);
             
             // Reset UI
             loadingSection.classList.add('hidden');
