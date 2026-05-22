@@ -21,8 +21,7 @@ body {
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
     background-image: 
         radial-gradient(circle at 15% 50%, rgba(29, 185, 84, 0.15), transparent 25%),
         radial-gradient(circle at 85% 30%, rgba(142, 45, 226, 0.15), transparent 25%);
@@ -32,6 +31,7 @@ body {
 .wrapper {
     width: 100%;
     max-width: 800px;
+    margin: auto;
     padding: 2rem;
     display: flex;
     flex-direction: column;
@@ -363,6 +363,16 @@ h1 {
     font-weight: 800;
 }
 
+#top-song {
+    font-size: 2rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+}
+
 .top-artists-container h2 {
     margin-bottom: 1.5rem;
     font-weight: 600;
@@ -442,5 +452,17 @@ footer {
     }
     .glass-panel {
         padding: 2rem 1rem;
+    }
+    .stat-value {
+        font-size: 2.2rem;
+    }
+    #top-song {
+        font-size: 1.5rem;
+    }
+    h1 {
+        font-size: 2.2rem;
+    }
+    .wrapper {
+        padding: 1rem;
     }
 }
