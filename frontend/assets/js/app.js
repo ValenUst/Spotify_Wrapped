@@ -17,14 +17,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const generateRandomString = (length) => {
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        const values = crypto.getRandomValues(new Uint8Array(length));
-        return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+        if (window.crypto && window.crypto.getRandomValues) {
+            const values = crypto.getRandomValues(new Uint8Array(length));
+            return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+        } else {
+            let text = '';
+            for (let i = 0; i < length; i++) {
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            }
+            return text;
+        }
     }
 
     const sha256 = async (plain) => {
-        const encoder = new TextEncoder()
-        const data = encoder.encode(plain)
-        return window.crypto.subtle.digest('SHA-256', data)
+        if (window.crypto && window.crypto.subtle) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(plain);
+            return window.crypto.subtle.digest('SHA-256', data);
+        } else if (window.CryptoJS) {
+            const hash = CryptoJS.SHA256(plain);
+            const words = hash.words;
+            const sigBytes = hash.sigBytes;
+            const u8 = new Uint8Array(sigBytes);
+            for (let i = 0; i < sigBytes; i++) {
+                u8[i] = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+            }
+            return u8;
+        } else {
+            throw new Error("No crypto support found");
+        }
     }
 
     const base64encode = (input) => {
